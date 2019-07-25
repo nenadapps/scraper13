@@ -1,3 +1,4 @@
+# MINN STAMP
 from bs4 import BeautifulSoup
 import datetime
 from random import randint

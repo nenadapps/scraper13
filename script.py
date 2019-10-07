@@ -40,23 +40,19 @@ def showmyip():
     
 UA = UserAgent(fallback='Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.2 (KHTML, like Gecko) Chrome/22.0.1216.0 Safari/537.2')
 
-hdr = {'User-Agent': "'"+UA.random+"'",
-       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-       'Accept-Charset': 'ISO-8859-1,utf-8;q=0.7,*;q=0.3',
-       'Accept-Encoding': 'none',
-       'Accept-Language': 'en-US,en;q=0.8',
-       'Connection': 'keep-alive'}
+hdr = {'User-Agent': UA.random}
 '''
+hdr =  {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11'}
+
 def get_html(url):
     
     html_content = ''
     try:
-        req = Request(url, headers= {'User-Agent': 'Mozilla/5.0 (X11; U; Linux i686) Gecko/20071127 Firefox/2.0.0.11'})#hdr)
-        html_page = urlopen(req).read()
+        reqs = Request(url, headers=hdr)
+        html_page = urlopen(reqs).read()
         html_content = BeautifulSoup(html_page, "html.parser")
     except: 
         pass
-    
     return html_content
 
 def get_page_items(url):
@@ -82,7 +78,6 @@ def get_page_items(url):
         next_url = next_url.replace('&amp;', '&') 
     except:
         pass
-    shuffle(list(set(items)))
     return items, next_url
 
 def get_categories(url):
@@ -94,7 +89,6 @@ def get_categories(url):
             items.append(item_url)
     except: 
         pass
-    shuffle(list(set(items)))
     return items
 
 
@@ -184,7 +178,7 @@ def query_for_previous(stamp):
     col_nm2 = 'raw_text'
     unique = stamp['url']
     unique2 = stamp['raw_text']
-    c.execute('SELECT * FROM minnstamp WHERE "{cn}" LIKE "{un}%" AND "{cn2}" LIKE "{un2}%"'.format(cn=col_nm, cn2=col_nm2, un=unique, un2=unique2))
+    c.execute('SELECT * FROM minnstamp WHERE {cn} LIKE "{un}%" AND {cn2} LIKE "{un2}%"'.format(cn=col_nm, cn2=col_nm2, un=unique, un2=unique2))
     all_rows = c.fetchall()
     conn1.close()
     price_update=[]
@@ -273,41 +267,50 @@ categories = {
 'United States':'http://www.minnstamp.com/catalog/index.php?cPath=36',
 'United Nations':'http://www.minnstamp.com/catalog/index.php?cPath=190'
 }
-count = 0
+#count = 0
 for category_name in categories:
     print(category_name + ': ' + categories[category_name])
 
 try:
     selected_category_name = input('Make a selection: ')
     category = categories[selected_category_name]
-    count += 1
+    #count += 1
 
     # loop through all subcategories
     subcategories = get_categories(category)
+    subcategories = list(set(subcategories))
     for subcategory in subcategories:
-    	count +=1
+    	#count +=1
     	# loop through all subcategories of level 2
     	subcategories2 = get_categories(subcategory)
     	if subcategories2:
     		page_urls = subcategories2
     	else:
     		page_urls = subcategory
+    	page_urls = list(set(page_urls))
     	for page_url in page_urls:
-        	count += 1
+        	#count += 1
         	while(page_url):
         		page_items, page_url = get_page_items(page_url)
         		# loop through all items on current page
         		for page_item in page_items:
+        			'''
         			count += 1
         			if count > randint(75, 156):
         				print('Sleeping...')
         				sleep(randint(500, 2000))
-        				#renew_tor()
+        				hdr['User-Agent'] = UA.random
+        				renew_tor()
+        				connectTor()
         				count = 0
         			else:
         				pass
+        			'''
         			stamp = get_details(page_item)
         			'''
+        			if stamp['price']==None and stamp['raw_text']==None:
+        				sleep(randint(500,700))
+        				continue
         			next_step = query_for_previous(stamp)
         			if next_step == 'continue':
         				print('Only updating price')
@@ -317,7 +320,8 @@ try:
         				pass
         			else:
         				break
-        			db_update_image_download(stamp)'''
+        			db_update_image_download(stamp)
+        			'''
     print('Scrape Complete')
 except:
     print('Please insert right value')

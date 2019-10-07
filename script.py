@@ -67,9 +67,12 @@ def get_page_items(url):
 
     try:
         for item in html.select('.productListingData tr a'):
-            item_href = item.get('href')  
+            item_href = item.get('href') 
             if 'product_info.php' in item_href:
-                items.append(item_href)
+                item_parts = item_href.split('&osCsid=')
+                item_link = item_parts[0]
+                if item_link not in items:
+                    items.append(item_link)
     except:
         pass
 
@@ -86,7 +89,8 @@ def get_categories(url):
         html = get_html(url)
         for item in html.select('.contentText .smallText a'):
             item_url = item.get('href')
-            items.append(item_url)
+            if item_url not in items:
+               items.append(item_url)
     except: 
         pass
     return items
